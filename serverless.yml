@@ -1,0 +1,66 @@
+service: trilobite
+
+provider:
+  name: aws
+  runtime: python3.7
+  region: eu-central-1
+  stage: prd
+  memorySize: 256
+  environment:
+    TELEGRAM_TOKEN: "${self:custom.secrets.TELEGRAM_TOKEN}"
+    USERS_TABLE_NAME: "${self:custom.tables.users.name}"
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+      Resource:
+        Fn::GetAtt: [UsersTable, Arn]
+
+functions:
+  webhook:
+    handler: bot.webhook
+    events:
+      - http:
+          path: telegram/webhook
+          method: post
+  cron:
+    handler: bot.cron
+    events:
+      - schedule: rate(5 minutes)
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "${self:custom.tables.users.name}"
+        AttributeDefinitions:
+          - AttributeName: telegram_user_id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: telegram_user_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: "${self:custom.tables.users.read_capacity}"
+          WriteCapacityUnits: "${self:custom.tables.users.write_capacity}"
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  secrets: "${ssm:/aws/reference/secretsmanager/trilobite~true}"
+  tables:
+    users:
+      name: trilobite_users
+      read_capacity: 1
+      write_capacity: 1
+  pythonRequirements:
+    pythonBin: /usr/bin/python3
+    useDownloadCache: true
+    useStaticCache: true

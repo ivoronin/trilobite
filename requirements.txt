@@ -1,0 +1,5 @@
+py-trello==0.15.0
+lark-parser==0.7.7
+pynamodb==4.1.0
+pytz==2019.3
+python-telegram-bot==12.2.0

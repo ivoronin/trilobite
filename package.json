@@ -1,0 +1,10 @@
+{
+    "name": "trilobite",
+    "description": "",
+    "version": "0.1.0",
+    "dependencies": {},
+    "devDependencies": {
+        "serverless": "^1.59.3",
+        "serverless-python-requirements": "^5.0.0"
+    }
+}
